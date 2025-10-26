@@ -1,245 +1,264 @@
-'use client'
+'use client';
 
-import { useAuth } from '@/hooks/useAuth'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { 
-  BookOpen, 
-  GraduationCap, 
-  Users, 
-  BarChart,
-  Plus,
-  PlayCircle,
+import { useAuth } from '@/hooks/useAuth';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import {
+  BookOpen,
+  GraduationCap,
+  Trophy,
+  Clock,
+  TrendingUp,
   FileText,
-  MessageSquare 
-} from 'lucide-react'
-import Link from 'next/link'
+  CheckCircle,
+  Award,
+  Users,
+  BarChart
+} from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth();
 
-  if (!user) {
-    return null
-  }
+  if (!profile) return null;
 
-  const isTeacher = user.role === 'Teacher' || user.role === 'Admin'
-  const isStudent = user.role === 'Student'
+  const isTeacher = profile.role === 'Teacher' || profile.role === 'Admin';
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold font-heading text-gray-900">
-          Selamat Datang, {user.full_name}!
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
+        <h1 className="text-3xl font-bold mb-2">
+          Selamat Datang, {profile.full_name}! 👋
         </h1>
-        <p className="text-gray-600 mt-2">
-          {isTeacher && 'Kelola kursus dan pantau progress siswa Anda'}
-          {isStudent && 'Lanjutkan pembelajaran dan kembangkan kemampuanmu'}
+        <p className="text-blue-100 text-lg">
+          {isTeacher 
+            ? 'Kelola kursus dan pantau progress siswa Anda' 
+            : 'Lanjutkan perjalanan belajar Anda hari ini'}
         </p>
       </div>
 
-      {/* Quick Stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {isTeacher ? 'Total Kursus' : 'Kursus Aktif'}
-            </CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              {isTeacher ? 'Kursus yang Anda buat' : 'Kursus yang diikuti'}
-            </p>
-          </CardContent>
-        </Card>
-
-        {isStudent && (
+        {isTeacher ? (
           <>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Progress</CardTitle>
-                <BarChart className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0%</div>
-                <p className="text-xs text-muted-foreground">
-                  Rata-rata penyelesaian
-                </p>
-              </CardContent>
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-blue-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Kursus</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">12</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> +2 bulan ini
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Tugas</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  Tugas yang harus dikerjakan
-                </p>
-              </CardContent>
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-purple-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Siswa</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">348</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <Users className="w-3 h-3" /> Aktif
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Users className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sertifikat</CardTitle>
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  Kursus diselesaikan
-                </p>
-              </CardContent>
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-orange-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Tugas Pending</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">24</p>
+                  <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Perlu direview
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-green-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Avg. Progress</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">76%</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> +5% minggu ini
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <BarChart className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
             </Card>
           </>
-        )}
-
-        {isTeacher && (
+        ) : (
           <>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Siswa</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  Total siswa terdaftar
-                </p>
-              </CardContent>
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-blue-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Kursus Aktif</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">6</p>
+                  <p className="text-xs text-blue-600 mt-2">Sedang berlangsung</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Tugas Pending</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  Menunggu penilaian
-                </p>
-              </CardContent>
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-green-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Progress</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">68%</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> Terus tingkatkan!
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Diskusi</CardTitle>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  Diskusi aktif
-                </p>
-              </CardContent>
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-orange-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Tugas</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">3</p>
+                  <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Deadline dekat
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-yellow-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Prestasi</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">12</p>
+                  <p className="text-xs text-yellow-600 mt-2 flex items-center gap-1">
+                    <Award className="w-3 h-3" /> Badge diraih
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-yellow-600" />
+                </div>
+              </div>
             </Card>
           </>
         )}
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>
-            Aksi cepat untuk memulai aktivitas Anda
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {isTeacher && (
-            <>
-              <Button className="h-auto flex-col py-6" variant="outline" asChild>
+      {/* Quick Actions & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quick Actions */}
+        <Card className="p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-blue-600" />
+            Aksi Cepat
+          </h2>
+          <div className="space-y-3">
+            {isTeacher ? (
+              <>
                 <Link href="/courses/create">
-                  <Plus className="h-6 w-6 mb-2" />
-                  <span>Buat Kursus Baru</span>
+                  <Button className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Buat Kursus Baru
+                  </Button>
                 </Link>
-              </Button>
-              <Button className="h-auto flex-col py-6" variant="outline" asChild>
-                <Link href="/courses">
-                  <BookOpen className="h-6 w-6 mb-2" />
-                  <span>Kelola Kursus</span>
-                </Link>
-              </Button>
-              <Button className="h-auto flex-col py-6" variant="outline" asChild>
-                <Link href="/submissions">
-                  <FileText className="h-6 w-6 mb-2" />
-                  <span>Review Tugas</span>
-                </Link>
-              </Button>
-              <Button className="h-auto flex-col py-6" variant="outline" asChild>
-                <Link href="/analytics">
-                  <BarChart className="h-6 w-6 mb-2" />
-                  <span>Lihat Analytics</span>
-                </Link>
-              </Button>
-            </>
-          )}
-
-          {isStudent && (
-            <>
-              <Button className="h-auto flex-col py-6" variant="outline" asChild>
-                <Link href="/courses">
-                  <BookOpen className="h-6 w-6 mb-2" />
-                  <span>Jelajahi Kursus</span>
-                </Link>
-              </Button>
-              <Button className="h-auto flex-col py-6" variant="outline" asChild>
-                <Link href="/my-courses">
-                  <PlayCircle className="h-6 w-6 mb-2" />
-                  <span>Lanjutkan Belajar</span>
-                </Link>
-              </Button>
-              <Button className="h-auto flex-col py-6" variant="outline" asChild>
                 <Link href="/assignments">
-                  <FileText className="h-6 w-6 mb-2" />
-                  <span>Lihat Tugas</span>
+                  <Button variant="outline" className="w-full justify-start">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Review Tugas Siswa
+                  </Button>
                 </Link>
-              </Button>
-              <Button className="h-auto flex-col py-6" variant="outline" asChild>
-                <Link href="/certificates">
-                  <GraduationCap className="h-6 w-6 mb-2" />
-                  <span>Sertifikat Saya</span>
+                <Link href="/students">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Users className="w-4 h-4 mr-2" />
+                    Kelola Siswa
+                  </Button>
                 </Link>
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Recent Activity / Courses */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {isTeacher ? 'Kursus Terbaru' : 'Kursus yang Sedang Diikuti'}
-          </CardTitle>
-          <CardDescription>
-            {isTeacher 
-              ? 'Kursus yang baru saja Anda buat atau update' 
-              : 'Lanjutkan pembelajaran dari kursus yang sedang Anda ikuti'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-gray-500">
-            <BookOpen className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <p>Belum ada kursus</p>
-            <p className="text-sm mt-2">
-              {isTeacher 
-                ? 'Mulai dengan membuat kursus pertama Anda' 
-                : 'Jelajahi dan daftar ke kursus yang tersedia'}
-            </p>
-            <Button className="mt-4" asChild>
-              <Link href="/courses">
-                {isTeacher ? 'Buat Kursus' : 'Jelajahi Kursus'}
-              </Link>
-            </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/courses">
+                  <Button className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Lihat Semua Kursus
+                  </Button>
+                </Link>
+                <Link href="/assignments">
+                  <Button variant="outline" className="w-full justify-start">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Kerjakan Tugas
+                  </Button>
+                </Link>
+                <Link href="/quizzes">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Trophy className="w-4 h-4 mr-2" />
+                    Ikuti Kuis
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card className="p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-purple-600" />
+            Aktivitas Terbaru
+          </h2>
+          <div className="space-y-4">
+            <div className="flex gap-3 pb-3 border-b border-gray-100">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Materi baru tersedia</p>
+                <p className="text-xs text-gray-500">Matematika Kelas 10 - 2 jam yang lalu</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pb-3 border-b border-gray-100">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Tugas dinilai</p>
+                <p className="text-xs text-gray-500">Bahasa Indonesia - Nilai: 85 - 5 jam yang lalu</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Tugas baru</p>
+                <p className="text-xs text-gray-500">Fisika - Deadline: 3 hari - 1 hari yang lalu</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
-  )
+  );
 }
