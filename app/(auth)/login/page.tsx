@@ -13,7 +13,7 @@ import * as z from 'zod';
 import { BookOpen, Lock, User } from 'lucide-react';
 
 const loginSchema = z.object({
-  identity_number: z.string().min(3, 'Nomor induk minimal 3 karakter'),
+  identity_number: z.string().min(1, 'Nomor induk tidak boleh kosong'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
 });
 
