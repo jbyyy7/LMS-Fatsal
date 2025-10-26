@@ -8,56 +8,92 @@ FROM profiles
 WHERE identity_number IS NULL 
 ORDER BY created_at DESC;
 
--- 2. UPDATE: Isi identity_number berdasarkan role
--- PILIH SALAH SATU CARA DIBAWAH:
+-- 2. CEK: Lihat semua user
+SELECT id, full_name, email, role, identity_number 
+FROM profiles 
+ORDER BY role, created_at;
 
--- CARA 1: Set manual satu-satu (RECOMMENDED)
--- Ganti 'user-id-here' dengan ID dari query diatas
+-- ============================================
+-- CARA 1: UPDATE MANUAL SATU-SATU (RECOMMENDED)
+-- ============================================
+-- Copy ID dari query diatas, lalu update satu-satu:
+
+-- Contoh untuk Admin (boleh 1 digit)
 UPDATE profiles 
-SET identity_number = '1'  -- untuk admin
-WHERE id = 'user-id-admin-here';
+SET identity_number = '1'
+WHERE id = 'masukkan-user-id-disini';
+
+-- Contoh untuk Teacher
+UPDATE profiles 
+SET identity_number = 'NIP001'
+WHERE id = 'masukkan-user-id-disini';
+
+-- Contoh untuk Student
+UPDATE profiles 
+SET identity_number = 'NIS001'
+WHERE id = 'masukkan-user-id-disini';
+
+-- ============================================
+-- CARA 2: UPDATE SEMUA SEKALIGUS (SIMPLE)
+-- ============================================
+-- Jalankan satu per satu, JANGAN sekaligus!
+
+-- Update Admin pertama
+UPDATE profiles 
+SET identity_number = '1'
+WHERE role = 'Admin' 
+  AND identity_number IS NULL
+LIMIT 1;
+
+-- Update Admin kedua (kalau ada)
+UPDATE profiles 
+SET identity_number = '2'
+WHERE role = 'Admin' 
+  AND identity_number IS NULL
+LIMIT 1;
+
+-- Update Teacher dengan nomor manual
+-- Ganti 'user-id' dengan ID yang sebenarnya
+UPDATE profiles SET identity_number = 'NIP001' WHERE id = 'user-id-teacher-1';
+UPDATE profiles SET identity_number = 'NIP002' WHERE id = 'user-id-teacher-2';
+UPDATE profiles SET identity_number = 'NIP003' WHERE id = 'user-id-teacher-3';
+
+-- Update Student dengan nomor manual
+-- Ganti 'user-id' dengan ID yang sebenarnya
+UPDATE profiles SET identity_number = 'NIS001' WHERE id = 'user-id-student-1';
+UPDATE profiles SET identity_number = 'NIS002' WHERE id = 'user-id-student-2';
+UPDATE profiles SET identity_number = 'NIS003' WHERE id = 'user-id-student-3';
+
+-- ============================================
+-- CARA 3: GUNAKAN USERNAME SEBAGAI IDENTITY_NUMBER (PALING MUDAH!)
+-- ============================================
+-- Kalau di SIAKAD username sudah diisi, bisa pakai ini:
 
 UPDATE profiles 
-SET identity_number = 'NIS001'  -- untuk siswa
-WHERE id = 'user-id-siswa-here';
+SET identity_number = username
+WHERE identity_number IS NULL 
+  AND username IS NOT NULL;
 
-UPDATE profiles 
-SET identity_number = 'NIP001'  -- untuk guru
-WHERE id = 'user-id-guru-here';
-
--- CARA 2: Auto-generate berdasarkan role (CEPAT tapi kurang akurat)
--- Untuk ADMIN: set nomor induk = 1, 2, 3, dst
-UPDATE profiles 
-SET identity_number = CAST(ROW_NUMBER() OVER (ORDER BY created_at) AS TEXT)
-WHERE role = 'Admin' AND identity_number IS NULL;
-
--- Untuk TEACHER: set nomor induk = NIP001, NIP002, dst
-UPDATE profiles 
-SET identity_number = 'NIP' || LPAD(CAST(ROW_NUMBER() OVER (ORDER BY created_at) AS TEXT), 3, '0')
-WHERE role = 'Teacher' AND identity_number IS NULL;
-
--- Untuk STUDENT: set nomor induk = NIS001, NIS002, dst  
-UPDATE profiles 
-SET identity_number = 'NIS' || LPAD(CAST(ROW_NUMBER() OVER (ORDER BY created_at) AS TEXT), 3, '0')
-WHERE role = 'Student' AND identity_number IS NULL;
-
--- 3. VERIFIKASI: Pastikan semua sudah terisi
-SELECT role, COUNT(*) as total, 
+-- ============================================
+-- VERIFIKASI: Cek hasil update
+-- ============================================
+SELECT role, 
+       COUNT(*) as total, 
        COUNT(identity_number) as has_identity,
        COUNT(*) - COUNT(identity_number) as missing
 FROM profiles 
 GROUP BY role;
 
--- 4. LIHAT HASIL
-SELECT id, full_name, email, role, identity_number 
+-- Lihat semua user dengan identity_number
+SELECT id, full_name, email, role, identity_number, username
 FROM profiles 
 ORDER BY role, identity_number
-LIMIT 20;
+LIMIT 50;
 
 -- ============================================
--- CATATAN PENTING:
--- - Admin bisa 1 digit (1, 2, 3, dst)
--- - Teacher biasanya NIP001, NIP002, dst
--- - Student biasanya NIS001, NIS002, dst
--- - Sesuaikan dengan nomor induk asli dari SIAKAD
+-- CATATAN:
+-- - Admin bisa 1 digit: '1', '2', '3'
+-- - Teacher pakai NIP: 'NIP001', 'NIP002'
+-- - Student pakai NIS: 'NIS001', 'NIS002'
+-- - Atau pakai username kalau sudah ada
 -- ============================================
