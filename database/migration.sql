@@ -26,7 +26,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ============================================
 -- COURSES TABLE
 -- ============================================
-CREATE TABLE courses (
+CREATE TABLE IF NOT EXISTS courses (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   description TEXT,
@@ -39,9 +39,9 @@ CREATE TABLE courses (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_courses_subject_id ON courses(subject_id);
-CREATE INDEX idx_courses_teacher_id ON courses(teacher_id);
-CREATE INDEX idx_courses_is_published ON courses(is_published);
+CREATE INDEX IF NOT EXISTS idx_courses_subject_id ON courses(subject_id);
+CREATE INDEX IF NOT EXISTS idx_courses_teacher_id ON courses(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_courses_is_published ON courses(is_published);
 
 -- RLS Policies
 ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
@@ -65,7 +65,7 @@ CREATE POLICY "Teachers can delete own courses"
 -- ============================================
 -- MODULES TABLE
 -- ============================================
-CREATE TABLE modules (
+CREATE TABLE IF NOT EXISTS modules (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -105,7 +105,7 @@ CREATE POLICY "Teachers can manage modules in own courses"
 -- ============================================
 -- LESSONS TABLE
 -- ============================================
-CREATE TABLE lessons (
+CREATE TABLE IF NOT EXISTS lessons (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   module_id UUID NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -153,7 +153,7 @@ CREATE POLICY "Teachers can manage lessons in own courses"
 -- ============================================
 -- ENROLLMENTS TABLE
 -- ============================================
-CREATE TABLE enrollments (
+CREATE TABLE IF NOT EXISTS enrollments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -198,7 +198,7 @@ CREATE POLICY "Students can enroll in published courses"
 -- ============================================
 -- LESSON PROGRESS TABLE
 -- ============================================
-CREATE TABLE lesson_progress (
+CREATE TABLE IF NOT EXISTS lesson_progress (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   enrollment_id UUID NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
   lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
@@ -241,7 +241,7 @@ CREATE POLICY "Teachers can view progress in own courses"
 -- ============================================
 -- ASSIGNMENTS TABLE
 -- ============================================
-CREATE TABLE assignments (
+CREATE TABLE IF NOT EXISTS assignments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -285,7 +285,7 @@ CREATE POLICY "Teachers can manage assignments in own courses"
 -- ============================================
 -- SUBMISSIONS TABLE
 -- ============================================
-CREATE TABLE submissions (
+CREATE TABLE IF NOT EXISTS submissions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -326,7 +326,7 @@ CREATE POLICY "Teachers can view and grade submissions in own courses"
 -- ============================================
 -- QUIZZES TABLE
 -- ============================================
-CREATE TABLE quizzes (
+CREATE TABLE IF NOT EXISTS quizzes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -371,7 +371,7 @@ CREATE POLICY "Teachers can manage quizzes in own courses"
 -- ============================================
 -- QUIZ QUESTIONS TABLE
 -- ============================================
-CREATE TABLE quiz_questions (
+CREATE TABLE IF NOT EXISTS quiz_questions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
   question TEXT NOT NULL,
@@ -419,7 +419,7 @@ CREATE POLICY "Teachers can manage questions in own courses"
 -- ============================================
 -- QUIZ ATTEMPTS TABLE
 -- ============================================
-CREATE TABLE quiz_attempts (
+CREATE TABLE IF NOT EXISTS quiz_attempts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -456,7 +456,7 @@ CREATE POLICY "Teachers can view attempts in own courses"
 -- ============================================
 -- DISCUSSIONS TABLE
 -- ============================================
-CREATE TABLE discussions (
+CREATE TABLE IF NOT EXISTS discussions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -518,7 +518,7 @@ CREATE POLICY "Users can delete own discussions"
 -- ============================================
 -- DISCUSSION REPLIES TABLE
 -- ============================================
-CREATE TABLE discussion_replies (
+CREATE TABLE IF NOT EXISTS discussion_replies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   discussion_id UUID NOT NULL REFERENCES discussions(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -581,7 +581,7 @@ CREATE POLICY "Users can delete own replies"
 -- ============================================
 -- COURSE ANNOUNCEMENTS TABLE
 -- ============================================
-CREATE TABLE course_announcements (
+CREATE TABLE IF NOT EXISTS course_announcements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   teacher_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
