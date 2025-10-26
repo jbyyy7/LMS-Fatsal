@@ -72,12 +72,17 @@ CREATE TABLE IF NOT EXISTS modules (
   description TEXT,
   "order" INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  UNIQUE(course_id, "order")
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_modules_course_id ON modules(course_id);
+-- Add unique constraint separately
+DO $$ BEGIN
+  ALTER TABLE modules ADD CONSTRAINT modules_course_id_order_key UNIQUE(course_id, "order");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_modules_course_id ON modules(course_id);
 
 -- RLS Policies
 ALTER TABLE modules ENABLE ROW LEVEL SECURITY;
@@ -117,12 +122,17 @@ CREATE TABLE IF NOT EXISTS lessons (
   "order" INTEGER NOT NULL DEFAULT 1,
   is_preview BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  UNIQUE(module_id, "order")
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_lessons_module_id ON lessons(module_id);
+-- Add unique constraint separately
+DO $$ BEGIN
+  ALTER TABLE lessons ADD CONSTRAINT lessons_module_id_order_key UNIQUE(module_id, "order");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_lessons_module_id ON lessons(module_id);
 CREATE INDEX idx_lessons_type ON lessons(type);
 
 -- RLS Policies
@@ -159,12 +169,17 @@ CREATE TABLE IF NOT EXISTS enrollments (
   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   completed_at TIMESTAMP WITH TIME ZONE,
-  progress DECIMAL(5, 2) DEFAULT 0,
-  
-  UNIQUE(course_id, student_id)
+  progress DECIMAL(5, 2) DEFAULT 0
 );
 
-CREATE INDEX idx_enrollments_course_id ON enrollments(course_id);
+-- Add unique constraint separately
+DO $$ BEGIN
+  ALTER TABLE enrollments ADD CONSTRAINT enrollments_course_id_student_id_key UNIQUE(course_id, student_id);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_enrollments_course_id ON enrollments(course_id);
 CREATE INDEX idx_enrollments_student_id ON enrollments(student_id);
 
 -- RLS Policies
@@ -206,12 +221,17 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
   completed_at TIMESTAMP WITH TIME ZONE,
   time_spent INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  UNIQUE(enrollment_id, lesson_id)
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_lesson_progress_enrollment_id ON lesson_progress(enrollment_id);
+-- Add unique constraint separately
+DO $$ BEGIN
+  ALTER TABLE lesson_progress ADD CONSTRAINT lesson_progress_enrollment_id_lesson_id_key UNIQUE(enrollment_id, lesson_id);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_lesson_progress_enrollment_id ON lesson_progress(enrollment_id);
 CREATE INDEX idx_lesson_progress_lesson_id ON lesson_progress(lesson_id);
 
 -- RLS Policies
@@ -295,12 +315,17 @@ CREATE TABLE IF NOT EXISTS submissions (
   score INTEGER,
   feedback TEXT,
   graded_at TIMESTAMP WITH TIME ZONE,
-  graded_by UUID REFERENCES profiles(id),
-  
-  UNIQUE(assignment_id, student_id)
+  graded_by UUID REFERENCES profiles(id)
 );
 
-CREATE INDEX idx_submissions_assignment_id ON submissions(assignment_id);
+-- Add unique constraint separately
+DO $$ BEGIN
+  ALTER TABLE submissions ADD CONSTRAINT submissions_assignment_id_student_id_key UNIQUE(assignment_id, student_id);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_submissions_assignment_id ON submissions(assignment_id);
 CREATE INDEX idx_submissions_student_id ON submissions(student_id);
 
 -- RLS Policies
@@ -380,12 +405,17 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
   correct_answer TEXT NOT NULL,
   points INTEGER DEFAULT 1,
   "order" INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  UNIQUE(quiz_id, "order")
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_quiz_questions_quiz_id ON quiz_questions(quiz_id);
+-- Add unique constraint separately
+DO $$ BEGIN
+  ALTER TABLE quiz_questions ADD CONSTRAINT quiz_questions_quiz_id_order_key UNIQUE(quiz_id, "order");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_quiz_id ON quiz_questions(quiz_id);
 
 -- RLS Policies
 ALTER TABLE quiz_questions ENABLE ROW LEVEL SECURITY;
