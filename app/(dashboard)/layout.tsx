@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
+import { Sidebar } from '@/components/layout/Sidebar'
 import { Footer } from '@/components/layout/Footer'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
 
@@ -12,7 +13,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -30,12 +31,18 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {children}
-      </main>
-      <Footer />
+    <div className="min-h-screen flex bg-gray-50">
+      {/* Sidebar */}
+      <Sidebar role={profile?.role as 'teacher' | 'student' | 'admin'} />
+      
+      {/* Main Content */}
+      <div className="flex-1 lg:ml-64">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 min-h-[calc(100vh-160px)]">
+          {children}
+        </main>
+        <Footer />
+      </div>
     </div>
   )
 }

@@ -1,146 +1,142 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { loginSchema } from '@/lib/validations'
-import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
-import toast from 'react-hot-toast'
-import type { z } from 'zod'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { BookOpen, Lock, User } from 'lucide-react';
 
-type LoginFormData = z.infer<typeof loginSchema>
+const loginSchema = z.object({
+  identity_number: z.string().min(3, 'Nomor induk minimal 3 karakter'),
+  password: z.string().min(6, 'Password minimal 6 karakter'),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors } 
-  } = useForm<LoginFormData>({
+  const router = useRouter();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-  })
+  });
 
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true)
-    
+  const onSubmit = async (data: LoginForm) => {
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      })
+      setLoading(true);
+      setError('');
 
-      if (error) {
-        throw error
-      }
-
-      if (!authData.user) {
-        throw new Error('Login gagal')
-      }
-
-      // Check user profile
+      // First, get user profile by identity_number
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single()
+        .select('id, email')
+        .eq('identity_number', data.identity_number)
+        .single();
 
-      if (profileError) {
-        throw profileError
+      if (profileError || !profile) {
+        throw new Error('Nomor induk tidak ditemukan');
       }
 
-      if (!profile) {
-        throw new Error('Profile tidak ditemukan')
+      if (!profile.email) {
+        throw new Error('Email tidak terdaftar. Hubungi admin.');
       }
 
-      toast.success('Login berhasil!')
-      router.push('/dashboard')
-    } catch (error: any) {
-      console.error('Login error:', error)
-      toast.error(error.message || 'Login gagal. Periksa email dan password Anda.')
+      // Then sign in with email and password
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: profile.email,
+        password: data.password,
+      });
+
+      if (authError) throw authError;
+
+      // Redirect to dashboard
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'Login gagal');
     } finally {
-      setIsLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Login</CardTitle>
-        <CardDescription>
-          Masuk dengan akun Yayasan Fathus Salafi Anda
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 shadow-2xl">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white mb-4">
+            <BookOpen className="w-8 h-8" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">LMS Fathus Salafi</h1>
+          <p className="text-gray-600">Masuk ke sistem pembelajaran</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="nama@email.com"
-              {...register('email')}
-              disabled={isLoading}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
+            <Label htmlFor="identity_number" className="text-sm font-medium text-gray-700">
+              Nomor Induk (NIS/NIP/NISN)
+            </Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                id="identity_number"
+                type="text"
+                placeholder="Masukkan nomor induk"
+                className="pl-10"
+                {...register('identity_number')}
+                disabled={loading}
+              />
+            </div>
+            {errors.identity_number && (
+              <p className="text-sm text-red-600">{errors.identity_number.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-              disabled={isLoading}
-            />
+            <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+              Password
+            </Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="Masukkan password"
+                className="pl-10"
+                {...register('password')}
+                disabled={loading}
+              />
+            </div>
             {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
+              <p className="text-sm text-red-600">{errors.password.message}</p>
             )}
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-semibold shadow-lg transition-all"
+            disabled={loading}
           >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? 'Memproses...' : 'Login'}
+            {loading ? 'Memproses...' : 'Masuk'}
           </Button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>
-            Akun dikelola bersama dengan{' '}
-            <a 
-              href={process.env.NEXT_PUBLIC_SIAKAD_URL || '#'}
-              className="text-primary-500 hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              SIAKAD
-            </a>
-            {' '}dan{' '}
-            <a 
-              href={process.env.NEXT_PUBLIC_WEBSITE_URL || '#'}
-              className="text-primary-500 hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Website Utama
-            </a>
-          </p>
+          <p>Lupa password? Hubungi administrator</p>
         </div>
-      </CardContent>
-    </Card>
-  )
+      </Card>
+    </div>
+  );
 }

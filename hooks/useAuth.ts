@@ -74,6 +74,7 @@ export function useAuth() {
 
   return {
     user,
+    profile: user, // alias for compatibility
     loading,
     signIn,
     signOut,
