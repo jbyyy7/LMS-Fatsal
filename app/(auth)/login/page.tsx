@@ -33,20 +33,36 @@ export default function LoginPage() {
       setLoading(true);
       setError('');
 
+      console.log('🔍 Mencari user dengan identity_number:', data.identity_number);
+
       // First, get user profile by identity_number
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, email')
+        .select('id, email, full_name, role')
         .eq('identity_number', data.identity_number)
         .single();
 
-      if (profileError || !profile) {
-        throw new Error('Nomor induk tidak ditemukan');
+      console.log('📋 Hasil query:', { profile, profileError });
+
+      if (profileError) {
+        console.error('❌ Error dari Supabase:', profileError);
+        
+        if (profileError.code === 'PGRST116') {
+          throw new Error(`Nomor induk "${data.identity_number}" tidak ditemukan. Pastikan nomor induk sudah terdaftar.`);
+        }
+        throw new Error(`Database error: ${profileError.message}`);
+      }
+
+      if (!profile) {
+        throw new Error('Nomor induk tidak ditemukan. Hubungi admin.');
       }
 
       if (!profile.email) {
-        throw new Error('Email tidak terdaftar. Hubungi admin.');
+        throw new Error(`Email tidak terdaftar untuk ${profile.full_name}. Hubungi admin.`);
       }
+
+      console.log('✅ User ditemukan:', profile.full_name, '- Role:', profile.role);
+      console.log('🔐 Mencoba login dengan email:', profile.email);
 
       // Then sign in with email and password
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -54,13 +70,23 @@ export default function LoginPage() {
         password: data.password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('❌ Error login:', authError);
+        
+        if (authError.message.includes('Invalid login credentials')) {
+          throw new Error('Password salah. Silakan coba lagi.');
+        }
+        throw new Error(`Login error: ${authError.message}`);
+      }
+
+      console.log('🎉 Login berhasil! Redirect ke dashboard...');
 
       // Redirect to dashboard
       router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
-      setError(err.message || 'Login gagal');
+      console.error('💥 Login gagal:', err);
+      setError(err.message || 'Login gagal. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }
