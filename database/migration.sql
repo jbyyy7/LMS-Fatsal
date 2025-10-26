@@ -24,9 +24,27 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================
+-- DROP EXISTING LMS TABLES (if any)
+-- ============================================
+-- Drop in reverse order due to foreign key dependencies
+DROP TABLE IF EXISTS course_announcements CASCADE;
+DROP TABLE IF EXISTS discussion_replies CASCADE;
+DROP TABLE IF EXISTS discussions CASCADE;
+DROP TABLE IF EXISTS quiz_attempts CASCADE;
+DROP TABLE IF EXISTS quiz_questions CASCADE;
+DROP TABLE IF EXISTS quizzes CASCADE;
+DROP TABLE IF EXISTS submissions CASCADE;
+DROP TABLE IF EXISTS assignments CASCADE;
+DROP TABLE IF EXISTS lesson_progress CASCADE;
+DROP TABLE IF EXISTS enrollments CASCADE;
+DROP TABLE IF EXISTS lessons CASCADE;
+DROP TABLE IF EXISTS modules CASCADE;
+DROP TABLE IF EXISTS courses CASCADE;
+
+-- ============================================
 -- COURSES TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS courses (
+CREATE TABLE courses (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   description TEXT,
@@ -39,9 +57,9 @@ CREATE TABLE IF NOT EXISTS courses (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_courses_subject_id ON courses(subject_id);
-CREATE INDEX IF NOT EXISTS idx_courses_teacher_id ON courses(teacher_id);
-CREATE INDEX IF NOT EXISTS idx_courses_is_published ON courses(is_published);
+CREATE INDEX idx_courses_subject_id ON courses(subject_id);
+CREATE INDEX idx_courses_teacher_id ON courses(teacher_id);
+CREATE INDEX idx_courses_is_published ON courses(is_published);
 
 -- RLS Policies
 ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
@@ -65,24 +83,18 @@ CREATE POLICY "Teachers can delete own courses"
 -- ============================================
 -- MODULES TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS modules (
+CREATE TABLE modules (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
   "order" INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(course_id, "order")
 );
 
--- Add unique constraint separately
-DO $$ BEGIN
-  ALTER TABLE modules ADD CONSTRAINT modules_course_id_order_key UNIQUE(course_id, "order");
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_modules_course_id ON modules(course_id);
+CREATE INDEX idx_modules_course_id ON modules(course_id);
 
 -- RLS Policies
 ALTER TABLE modules ENABLE ROW LEVEL SECURITY;
@@ -110,7 +122,7 @@ CREATE POLICY "Teachers can manage modules in own courses"
 -- ============================================
 -- LESSONS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS lessons (
+CREATE TABLE lessons (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   module_id UUID NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -122,17 +134,11 @@ CREATE TABLE IF NOT EXISTS lessons (
   "order" INTEGER NOT NULL DEFAULT 1,
   is_preview BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(module_id, "order")
 );
 
--- Add unique constraint separately
-DO $$ BEGIN
-  ALTER TABLE lessons ADD CONSTRAINT lessons_module_id_order_key UNIQUE(module_id, "order");
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_lessons_module_id ON lessons(module_id);
+CREATE INDEX idx_lessons_module_id ON lessons(module_id);
 CREATE INDEX idx_lessons_type ON lessons(type);
 
 -- RLS Policies
@@ -163,23 +169,17 @@ CREATE POLICY "Teachers can manage lessons in own courses"
 -- ============================================
 -- ENROLLMENTS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS enrollments (
+CREATE TABLE enrollments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   completed_at TIMESTAMP WITH TIME ZONE,
-  progress DECIMAL(5, 2) DEFAULT 0
+  progress DECIMAL(5, 2) DEFAULT 0,
+  UNIQUE(course_id, student_id)
 );
 
--- Add unique constraint separately
-DO $$ BEGIN
-  ALTER TABLE enrollments ADD CONSTRAINT enrollments_course_id_student_id_key UNIQUE(course_id, student_id);
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_enrollments_course_id ON enrollments(course_id);
+CREATE INDEX idx_enrollments_course_id ON enrollments(course_id);
 CREATE INDEX idx_enrollments_student_id ON enrollments(student_id);
 
 -- RLS Policies
@@ -213,7 +213,7 @@ CREATE POLICY "Students can enroll in published courses"
 -- ============================================
 -- LESSON PROGRESS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS lesson_progress (
+CREATE TABLE lesson_progress (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   enrollment_id UUID NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
   lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
@@ -221,17 +221,11 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
   completed_at TIMESTAMP WITH TIME ZONE,
   time_spent INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(enrollment_id, lesson_id)
 );
 
--- Add unique constraint separately
-DO $$ BEGIN
-  ALTER TABLE lesson_progress ADD CONSTRAINT lesson_progress_enrollment_id_lesson_id_key UNIQUE(enrollment_id, lesson_id);
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_lesson_progress_enrollment_id ON lesson_progress(enrollment_id);
+CREATE INDEX idx_lesson_progress_enrollment_id ON lesson_progress(enrollment_id);
 CREATE INDEX idx_lesson_progress_lesson_id ON lesson_progress(lesson_id);
 
 -- RLS Policies
@@ -261,7 +255,7 @@ CREATE POLICY "Teachers can view progress in own courses"
 -- ============================================
 -- ASSIGNMENTS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS assignments (
+CREATE TABLE assignments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -305,7 +299,7 @@ CREATE POLICY "Teachers can manage assignments in own courses"
 -- ============================================
 -- SUBMISSIONS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS submissions (
+CREATE TABLE submissions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -315,17 +309,11 @@ CREATE TABLE IF NOT EXISTS submissions (
   score INTEGER,
   feedback TEXT,
   graded_at TIMESTAMP WITH TIME ZONE,
-  graded_by UUID REFERENCES profiles(id)
+  graded_by UUID REFERENCES profiles(id),
+  UNIQUE(assignment_id, student_id)
 );
 
--- Add unique constraint separately
-DO $$ BEGIN
-  ALTER TABLE submissions ADD CONSTRAINT submissions_assignment_id_student_id_key UNIQUE(assignment_id, student_id);
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_submissions_assignment_id ON submissions(assignment_id);
+CREATE INDEX idx_submissions_assignment_id ON submissions(assignment_id);
 CREATE INDEX idx_submissions_student_id ON submissions(student_id);
 
 -- RLS Policies
@@ -351,7 +339,7 @@ CREATE POLICY "Teachers can view and grade submissions in own courses"
 -- ============================================
 -- QUIZZES TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS quizzes (
+CREATE TABLE quizzes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -396,7 +384,7 @@ CREATE POLICY "Teachers can manage quizzes in own courses"
 -- ============================================
 -- QUIZ QUESTIONS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS quiz_questions (
+CREATE TABLE quiz_questions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
   question TEXT NOT NULL,
@@ -405,17 +393,11 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
   correct_answer TEXT NOT NULL,
   points INTEGER DEFAULT 1,
   "order" INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(quiz_id, "order")
 );
 
--- Add unique constraint separately
-DO $$ BEGIN
-  ALTER TABLE quiz_questions ADD CONSTRAINT quiz_questions_quiz_id_order_key UNIQUE(quiz_id, "order");
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_quiz_questions_quiz_id ON quiz_questions(quiz_id);
+CREATE INDEX idx_quiz_questions_quiz_id ON quiz_questions(quiz_id);
 
 -- RLS Policies
 ALTER TABLE quiz_questions ENABLE ROW LEVEL SECURITY;
@@ -449,7 +431,7 @@ CREATE POLICY "Teachers can manage questions in own courses"
 -- ============================================
 -- QUIZ ATTEMPTS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS quiz_attempts (
+CREATE TABLE quiz_attempts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -486,7 +468,7 @@ CREATE POLICY "Teachers can view attempts in own courses"
 -- ============================================
 -- DISCUSSIONS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS discussions (
+CREATE TABLE discussions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -548,7 +530,7 @@ CREATE POLICY "Users can delete own discussions"
 -- ============================================
 -- DISCUSSION REPLIES TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS discussion_replies (
+CREATE TABLE discussion_replies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   discussion_id UUID NOT NULL REFERENCES discussions(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -611,7 +593,7 @@ CREATE POLICY "Users can delete own replies"
 -- ============================================
 -- COURSE ANNOUNCEMENTS TABLE
 -- ============================================
-CREATE TABLE IF NOT EXISTS course_announcements (
+CREATE TABLE course_announcements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   teacher_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
