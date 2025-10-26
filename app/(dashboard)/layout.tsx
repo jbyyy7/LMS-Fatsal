@@ -33,7 +33,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <Sidebar role={profile?.role as 'teacher' | 'student' | 'admin'} />
+      <Sidebar role={profile?.role?.toLowerCase() as 'admin' | 'staff' | 'teacher' | 'student'} />
       
       {/* Main Content */}
       <div className="flex-1 lg:ml-64">

@@ -22,7 +22,10 @@ export default function DashboardPage() {
 
   if (!profile) return null;
 
-  const isTeacher = profile.role === 'Teacher' || profile.role === 'Admin';
+  const isAdmin = profile.role === 'Admin';
+  const isStaff = profile.role === 'Staff';
+  const isTeacher = profile.role === 'Teacher';
+  const isStudent = profile.role === 'Student';
 
   return (
     <div className="space-y-8">
@@ -32,15 +35,143 @@ export default function DashboardPage() {
           Selamat Datang, {profile.full_name}! 👋
         </h1>
         <p className="text-blue-100 text-lg">
-          {isTeacher 
-            ? 'Kelola kursus dan pantau progress siswa Anda' 
-            : 'Lanjutkan perjalanan belajar Anda hari ini'}
+          {isAdmin && 'Dashboard Super Admin - Kelola semua sekolah dan sistem'}
+          {isStaff && 'Dashboard Staff - Kelola sekolah Anda'}
+          {isTeacher && 'Kelola kursus dan pantau progress siswa Anda'} 
+          {isStudent && 'Lanjutkan perjalanan belajar Anda hari ini'}
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {isTeacher ? (
+        {isAdmin ? (
+          // SUPER ADMIN STATS
+          <>
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-blue-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Sekolah</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">5</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> Semua aktif
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-purple-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Kursus</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">48</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <BookOpen className="w-3 h-3" /> Semua sekolah
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-orange-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Guru</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">85</p>
+                  <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                    <Users className="w-3 h-3" /> Aktif mengajar
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <Users className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-green-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Siswa</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">1,248</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> Terdaftar aktif
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <BarChart className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </Card>
+          </>
+        ) : isStaff ? (
+          // STAFF (ADMIN SEKOLAH) STATS
+          <>
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-blue-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Kursus Sekolah</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">18</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> +3 bulan ini
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-purple-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Guru Aktif</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">24</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <Users className="w-3 h-3" /> Mengajar
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Users className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-orange-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Siswa Sekolah</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">356</p>
+                  <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
+                    <Users className="w-3 h-3" /> Terdaftar
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-green-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Avg. Progress</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">72%</p>
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" /> +4% minggu ini
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <BarChart className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </Card>
+          </>
+        ) : isTeacher ? (
+          // TEACHER STATS
           <>
             <Card className="p-6 hover:shadow-lg transition-shadow border-l-4 border-l-blue-600">
               <div className="flex items-center justify-between">

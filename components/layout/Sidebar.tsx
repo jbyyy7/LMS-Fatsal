@@ -22,7 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
-  role?: 'teacher' | 'student' | 'admin';
+  role?: 'admin' | 'staff' | 'teacher' | 'student';
 }
 
 interface MenuItem {
@@ -45,8 +45,79 @@ export function Sidebar({ role = 'student' }: SidebarProps) {
     );
   };
 
-  const menuItems: MenuItem[] = role === 'teacher' 
+  const menuItems: MenuItem[] = role === 'admin'
     ? [
+        // SUPER ADMIN - Akses semua sekolah
+        {
+          title: 'Dashboard',
+          icon: <LayoutDashboard className="w-5 h-5" />,
+          href: '/dashboard',
+        },
+        {
+          title: 'Manajemen Sekolah',
+          icon: <Users className="w-5 h-5" />,
+          children: [
+            { title: 'Semua Sekolah', icon: <BookMarked className="w-4 h-4" />, href: '/admin/schools' },
+            { title: 'Staff Sekolah', icon: <Users className="w-4 h-4" />, href: '/admin/staff' },
+          ],
+        },
+        {
+          title: 'Kursus Global',
+          icon: <BookOpen className="w-5 h-5" />,
+          children: [
+            { title: 'Semua Kursus', icon: <BookMarked className="w-4 h-4" />, href: '/courses' },
+            { title: 'Buat Kursus', icon: <FileText className="w-4 h-4" />, href: '/courses/create' },
+          ],
+        },
+        {
+          title: 'Laporan',
+          icon: <ClipboardList className="w-5 h-5" />,
+          href: '/admin/reports',
+        },
+        {
+          title: 'Pengaturan',
+          icon: <Settings className="w-5 h-5" />,
+          href: '/settings',
+        },
+      ]
+    : role === 'staff'
+    ? [
+        // STAFF - Admin 1 sekolah
+        {
+          title: 'Dashboard',
+          icon: <LayoutDashboard className="w-5 h-5" />,
+          href: '/dashboard',
+        },
+        {
+          title: 'Manajemen Kursus',
+          icon: <BookOpen className="w-5 h-5" />,
+          children: [
+            { title: 'Semua Kursus', icon: <BookMarked className="w-4 h-4" />, href: '/courses' },
+            { title: 'Buat Kursus', icon: <FileText className="w-4 h-4" />, href: '/courses/create' },
+          ],
+        },
+        {
+          title: 'Guru & Siswa',
+          icon: <Users className="w-5 h-5" />,
+          children: [
+            { title: 'Daftar Guru', icon: <Users className="w-4 h-4" />, href: '/staff/teachers' },
+            { title: 'Daftar Siswa', icon: <Users className="w-4 h-4" />, href: '/staff/students' },
+          ],
+        },
+        {
+          title: 'Laporan Sekolah',
+          icon: <ClipboardList className="w-5 h-5" />,
+          href: '/staff/reports',
+        },
+        {
+          title: 'Pengaturan',
+          icon: <Settings className="w-5 h-5" />,
+          href: '/settings',
+        },
+      ]
+    : role === 'teacher' 
+    ? [
+        // GURU
         {
           title: 'Dashboard',
           icon: <LayoutDashboard className="w-5 h-5" />,
@@ -82,6 +153,7 @@ export function Sidebar({ role = 'student' }: SidebarProps) {
         },
       ]
     : [
+        // STUDENT
         {
           title: 'Dashboard',
           icon: <Home className="w-5 h-5" />,
